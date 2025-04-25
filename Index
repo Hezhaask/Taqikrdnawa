@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ku-iq" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کویز بە تایمەر</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #e5f5eb;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 700px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #075e54;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            text-align: right;
+        }
+
+        .timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .timer-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #128c7e;
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            color: #25d366;
+            font-weight: bold;
+            border: 2px solid #25d366;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 10px auto;
+            transition: all 0.3s;
+        }
+
+        .timer.warning {
+            color: #ff9800;
+            border-color: #ff9800;
+        }
+
+        .timer.danger {
+            color: #f44336;
+            border-color: #f44336;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .progress-container {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #25d366;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-counter {
+            font-size: 0.9rem;
+            color: #075e54;
+            margin-bottom: 10px;
+            text-align: right;
+        }
+
+        .question {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            background-color: #f0f0f0;
+            border: 2px solid #dcdcdc;
+            border-radius: 5px;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: right;
+        }
+
+        .option:hover {
+            background-color: #dcdcdc;
+        }
+
+        .option.selected {
+            background-color: #128c7e;
+            border-color: #075e54;
+            color: white;
+        }
+
+        .option.correct {
+            background-color: #4caf50;
+            border-color: #2e7d32;
+            color: white;
+        }
+
+        .option.incorrect {
+            background-color: #f44336;
+            border-color: #c62828;
+            color: white;
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        button {
+            background-color: #25d366;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #128c7e;
+        }
+
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .score-container {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            text-align: right;
+        }
+
+        .score {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .total-time {
+            font-size: 1rem;
+            color: #075e54;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .feedback.excellent {
+            color: #4caf50;
+        }
+
+        .feedback.good {
+            color: #2196f3;
+        }
+
+        .feedback.average {
+            color: #ff9800;
+        }
+
+        .question-review {
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .review-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+        }
+
+        .review-question {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .review-answer {
+            color: #075e54;
+        }
+
+        .review-answer.incorrect {
+            color: #f44336;
+        }
+
+        .share-section {
+            margin-top: 20px;
+        }
+
+        .share-button {
+            background-color: #3b5998;
+            margin: 0 5px;
+        }
+
+        .share-button.whatsapp {
+            background-color: #25d366;
+        }
+
+        .share-button.telegram {
+            background-color: #0088cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="start-screen">
+            <h1>کویز بە تایمەر</h1>
+            <p>تکایە ناوی خۆت و ژمارەی تەلەفۆنت بنووسە</p>
+            <input type="text" id="username" placeholder="ناو" required>
+            <input type="tel" id="userphone" placeholder="ژمارەی تەلەفۆن" required>
+            <div class="controls">
+                <button id="start-btn">دەست پێ بکە</button>
+            </div>
+        </div>
+
+        <div id="quiz-container" class="hidden">
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress" id="progress"></div>
+                </div>
+            </div>
+            <div class="question-counter" id="question-counter"></div>
+            <div class="timer-container">
+                <div class="timer-label">کات</div>
+                <div class="timer" id="timer">30</div>
+            </div>
+            <div class="question" id="question"></div>
+            <div class="options" id="options-container"></div>
+            <div class="controls">
+                <button id="next-btn" disabled>پرسیاری داهاتوو</button>
+            </div>
+        </div>
+
+        <div id="end-screen" class="hidden">
+            <h1>کویز تەواو بوو</h1>
+            <div class="score-container">
+                <div class="score" id="score"></div>
+                <div class="total-time" id="total-time"></div>
+                <div class="feedback" id="feedback"></div>
+            </div>
+            <div class="question-review" id="question-review"></div>
+            <div class="controls">
+                <button id="restart-btn">دووبارە هەوڵبدە</button>
+            </div>
+            <div class="share-section">
+                <p>ئەنجامەکەت باڵاو بکەوە</p>
+                <button class="share-button whatsapp" id="share-whatsapp">WhatsApp</button>
+                <button class="share-button telegram" id="share-telegram">Telegram</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "پایتەختی کوردستان کامەیە؟",
+                options: ["هەولێر", "سلێمانی", "دهۆک", "کەرکوک"],
+                correctAnswer: "هەولێر"
+            },
+            {
+                question: "ڕووباری زێی گەورە لە کام وڵات سەرچاوە دەگرێت؟",
+                options: ["ئێران", "تورکیا", "سوریا", "عێراق"],
+                correctAnswer: "تورکیا"
+            },
+            {
+                question: "کامە لەم زانایانە کوردە؟",
+                options: ["ئیبن سینا", "فارابی", "ئیبن خەلدون", "ئیبن ئەلئەسیر"],
+                correctAnswer: "ئیبن ئەلئەسیر"
+            },
+            {
+                question: "مەم و زین بەرهەمی کێیە؟",
+                options: ["نالی", "مەحوی", "ئەحمەدی خانی", "حاجی قادری کۆیی"],
+                correctAnswer: "ئەحمەدی خانی"
+            },
+            {
+                question: "چیای ئاگری لەکوێیە؟",
+                options: ["باکووری کوردستان", "ڕۆژهەڵاتی کوردستان", "باشووری کوردستان", "ڕۆژئاوای کوردستان"],
+                correctAnswer: "باکووری کوردستان"
+            },
+            {
+                question: "نەورۆز لە چ ڕۆژێک دەستپێدەکات؟",
+                options: ["١ی ڕەشەمە", "٢١ی ئازار", "١ی نیسان", "١٠ی گوڵان"],
+                correctAnswer: "٢١ی ئازار"
+            },
+            {
+                question: "کتێبی 'شەرەفنامە' لە سەر مێژووی کورد نووسراوە لە لایەن کێ؟",
+                options: ["مەسعوود محەمەد", "شەرەف خانی بەدلیسی", "ئەحمەدی خانی", "هەژار موکریانی"],
+                correctAnswer: "شەرەف خانی بەدلیسی"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timeLeft = 30;
+        let timerInterval;
+        let selectedOption = null;
+        let startTime;
+        let totalTime = 0;
+        let userAnswers = [];
+
+        const startScreen = document.getElementById('start-screen');
+        const quizContainer = document.getElementById('quiz-container');
+        const endScreen = document.getElementById('end-screen');
+        const questionElement = document.getElementById('question');
+        const optionsContainer = document.getElementById('options-container');
+        const timerElement = document.getElementById('timer');
+        const nextButton = document.getElementById('next-btn');
+        const startButton = document.getElementById('start-btn');
+        const restartButton = document.getElementById('restart-btn');
+        const scoreElement = document.getElementById('score');
+        const totalTimeElement = document.getElementById('total-time');
+        const feedbackElement = document.getElementById('feedback');
+        const progressElement = document.getElementById('progress');
+        const questionCounterElement = document.getElementById('question-counter');
+        const questionReviewElement = document.getElementById('question-review');
+        const shareWhatsAppButton = document.getElementById('share-whatsapp');
+        const shareTelegramButton = document.getElementById('share-telegram');
+
+        startButton.addEventListener('click', startQuiz);
+        nextButton.addEventListener('click', goToNextQuestion);
+        restartButton.addEventListener('click', () => {
+            endScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        });
+
+        shareWhatsAppButton.addEventListener('click', shareOnWhatsApp);
+        shareTelegramButton.addEventListener('click', shareOnTelegram);
+
+        function startQuiz() {
+            const name = document.getElementById('username').value.trim();
+            const phone = document.getElementById('userphone').value.trim();
+
+            if (!name || !phone) {
+                alert("تکایە ناو و ژمارەی تەلەفۆن پڕبکە.");
+                return;
+            }
+
+            startScreen.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            totalTime = 0;
+            startTime = new Date();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            questionElement.textContent = currentQuestion.question;
+            optionsContainer.innerHTML = '';
+            selectedOption = null;
+            nextButton.disabled = true;
+
+            // Update progress bar
+            const progressPercentage = (currentQuestionIndex / questions.length) * 100;
+            progressElement.style.width = `${progressPercentage}%`;
+
+            // Update question counter
+            questionCounterElement.textContent = `پرسیار ${currentQuestionIndex + 1} لە ${questions.length}`;
+
+            currentQuestion.options.forEach(option => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => selectOption(optionElement, option));
+                optionsContainer.appendChild(optionElement);
+            });
+
+            resetTimer();
+        }
+
+        function selectOption(optionElement, selectedAnswer) {
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => option.classList.remove('selected'));
+            optionElement.classList.add('selected');
+            selectedOption = selectedAnswer;
+            nextButton.disabled = false;
+        }
+
+        function goToNextQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            const isCorrect = selectedOption === currentQuestion.correctAnswer;
+            
+            if (isCorrect) {
+                score++;
+            }
+
+            // Save user answer
+            userAnswers.push({
+                question: currentQuestion.question,
+                userAnswer: selectedOption,
+                correctAnswer: currentQuestion.correctAnswer,
+                isCorrect: isCorrect
+            });
+
+            clearInterval(timerInterval);
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                endQuiz();
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 30;
+            timerElement.textContent = timeLeft;
+            timerElement.classList.remove('warning', 'danger');
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = timeLeft;
+
+                // Add warning colors
+                if (timeLeft <= 10 && timeLeft > 5) {
+                    timerElement.classList.add('warning');
+                    timerElement.classList.remove('danger');
+                } else if (timeLeft <= 5) {
+                    timerElement.classList.remove('warning');
+                    timerElement.classList.add('danger');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    // If time runs out and no option is selected, record as incorrect answer
+                    if (!selectedOption) {
+                        selectedOption = "";
+                    }
+                    goToNextQuestion();
+                }
+            }, 1000);
+        }
+
+        function endQuiz() {
+            clearInterval(timerInterval);
+            quizContainer.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+
+            const endTime = new Date();
+            totalTime = Math.floor((endTime - startTime) / 1000); // in seconds
+
+            const name = document.getElementById('username').value.trim();
+            const phone = document.getElementById('userphone').value.trim();
+            
+            // Format total time as minutes:seconds
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+            const formattedTime = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+            
+            scoreElement.textContent = `ناو: ${name}\nژمارە: ${phone}\nئەنجامت: ${score} لە ${questions.length}`;
+            totalTimeElement.textContent = `کاتی بەکارهاتوو: ${formattedTime}`;
+            
+            // Add feedback based on score
+            const percentage = (score / questions.length) * 100;
+            let feedbackText = '';
+            let feedbackClass = '';
+            
+            if (percentage >= 80) {
+                feedbackText = 'زۆر بەرزە! 🌟';
+                feedbackClass = 'excellent';
+            } else if (percentage >= 60) {
+                feedbackText = 'باشە! 👍';
+                feedbackClass = 'good';
+            } else {
+                feedbackText = 'هەوڵی زیاتر بدە! 📚';
+                feedbackClass = 'average';
+            }
+            
+            feedbackElement.textContent = feedbackText;
+            feedbackElement.className = 'feedback ' + feedbackClass;
+            
+            // Generate question review
+            generateQuestionReview();
+        }
+        
+        function generateQuestionReview() {
+            questionReviewElement.innerHTML = '<h3>وەڵامەکانت:</h3>';
+            
+            userAnswers.forEach((answer, index) => {
+                const reviewItem = document.createElement('div');
+                reviewItem.classList.add('review-item');
+                
+                const questionText = document.createElement('div');
+                questionText.classList.add('review-question');
+                questionText.textContent = `${index + 1}. ${answer.question}`;
+                
+                const answerText = document.createElement('div');
+                answerText.classList.add('review-answer');
+                if (!answer.isCorrect) {
+                    answerText.classList.add('incorrect');
+                    answerText.textContent = `وەڵامی تۆ: ${answer.userAnswer || 'بێ وەڵام'} | وەڵامی ڕاست: ${answer.correctAnswer}`;
+                } else {
+                    answerText.textContent = `وەڵامی تۆ: ${answer.userAnswer} ✓`;
+                }
+                
+                reviewItem.appendChild(questionText);
+                reviewItem.appendChild(answerText);
+                questionReviewElement.appendChild(reviewItem);
+            });
+        }
+        
+        function shareOnWhatsApp() {
+            const name = document.getElementById('username').value.trim();
+            const score = userAnswers.filter(answer => answer.isCorrect).length;
+            const total = questions.length;
+            const message = `من ${name} ئەنجامم لە کویزی کوردی: ${score}/${total} 🎓`;
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        }
+        
+        function shareOnTelegram() {
+            const name = document.getElementById('username').value.trim();
+            const score = userAnswers.filter(answer => answer.isCorrect).length;
+            const total = questions.length;
+            const message = `من ${name} ئەنجامم لە کویزی کوردی: ${score}/${total} 🎓`;
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://t.me/share/url?url=&text=${encodedMessage}`, '_blank');
+        }
+    </script>
+</body>
+</html>
